@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Organizational Learning</title>
+  <style>
+    table {
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    td {
+      width: 30px;
+      height: 30px;
+      border: 1px solid #000;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<script>
+  const dimensions = 9; // Change this to the number of knowledge dimensions
+  const agents = 6; // Change this to the number of agents
+
+  let p1 = 0.5; // Socialization rate.
+  let p2 = 0.5; // Organizational learning rate.
+
+  // Randomly initialized organizational code:
+  let orgcode = Array(dimensions).fill(null).map(() => Math.random() < 0.5);
+
+  // Randomly initialized individual beliefs:
+  let belief = Array.from({ length: agents }, () => Array(dimensions).fill(null).map(() => Math.random() < 0.5));
+
+  function toggleBeliefColor(row, col) {
+    belief[row][col] = !belief[row][col];
+    updateBeliefs();
+  }
+
+  function updateBeliefs() {
+    const table = document.getElementById('belief');
+
+    for (let i = 0; i < agents; i++) {
+      for (let j = 0; j < dimensions; j++) {
+        const cell = table.rows[i + 1].cells[j + 1];
+        cell.style.backgroundColor = belief[i][j] ? 'green' : 'red';
+      }
+    }
+  }
+
+ function toggleOrgCodeColor(col) {
+    orgcode[col] = !orgcode[col];
+    updateOrgCode();
+  }
+
+function updateOrgCode() {
+    const orgCodeRow = document.getElementById('orgCodeRow');
+
+    for (let j = 1; j <= dimensions; j++) {
+      const cell = orgCodeRow.cells[j];
+      cell.style.backgroundColor = orgcode[j-1] ? 'green' : 'red';
+    }
+  }
+
+  function initializeSimulation() {
+
+    // Inputs:
+    const p1Label = document.createElement('label');
+    p1Label.textContent = 'p1';
+    document.body.appendChild(p1Label);
+    const p1Input = document.createElement('input');
+    p1Input.type = 'number';
+    p1Input.value = p1;
+    p1Input.step = '0.01';
+    p1Input.min = '0';
+    p1Input.max = '1';
+    p1Input.id = 'p1';
+    document.body.appendChild(p1Input);
+
+    const p2Label = document.createElement('label');
+    p2Label.textContent = 'p2';
+    document.body.appendChild(p2Label);
+    const p2Input = document.createElement('input');
+    p2Input.type = 'number';
+    p2Input.value = p2;
+    p2Input.step = '0.01';
+    p2Input.min = '0';
+    p2Input.max = '1';
+    p2Input.id = 'p2';
+    document.body.appendChild(p2Input);
+
+    const updateButton = document.createElement('button');
+    updateButton.textContent = 'Update Probabilities';
+    updateButton.addEventListener('click', updateProbabilities);
+    document.body.appendChild(updateButton);
+
+    // Code:
+    const orgCodeTable = document.createElement('table');
+    const orgCodeRow = orgCodeTable.insertRow();
+    orgCodeRow.id = 'orgCodeRow';
+
+    const codeLabelCell = orgCodeRow.insertCell();
+    codeLabelCell.textContent = 'ORG';
+
+    for (let j = 0; j < dimensions; j++) {
+      const cell = orgCodeRow.insertCell();
+      cell.addEventListener('click', () => toggleOrgCodeColor(j));
+      cell.style.backgroundColor = orgcode[j] ? 'green' : 'red';
+    }
+
+    document.body.appendChild(orgCodeTable);
+    updateOrgCode();
+
+    // Beliefs:
+    const table = document.createElement('table');
+    table.id = 'belief'; // Added an ID to the table for easy reference
+    const headerRow = table.insertRow();
+    headerRow.insertCell(); // Empty cell at the top-left corner
+
+    for (let j = 0; j < dimensions; j++) {
+      const cell = headerRow.insertCell();
+      cell.textContent = `D${j + 1}`;
+    }
+
+    for (let i = 0; i < agents; i++) {
+      const row = table.insertRow();
+      const codeCell = row.insertCell();
+      codeCell.textContent = `A${i + 1}`;
+
+      for (let j = 0; j < dimensions; j++) {
+        const cell = row.insertCell();
+        cell.addEventListener('click', () => toggleBeliefColor(i, j));
+        cell.style.backgroundColor = belief[i][j] ? 'green' : 'red';
+      }
+
+    }
+
+    document.body.appendChild(table);
+    updateBeliefs();
+
+    // Step button:
+    const simulationButton = document.createElement('button');
+    simulationButton.textContent = 'Step Simulation';
+    simulationButton.addEventListener('click', stepSimulation);
+    document.body.appendChild(document.createElement('br'));
+    document.body.appendChild(simulationButton);
+
+    // Restart button:
+    const restartButton = document.createElement('button');
+    restartButton.textContent = 'Restart';
+    restartButton.addEventListener('click', restartSimulation);
+    document.body.appendChild(document.createElement('br'));
+     document.body.appendChild(document.createElement('br'));
+    document.body.appendChild(restartButton);
+  }
+
+  function updateProbabilities() {
+    p1 = parseFloat(document.getElementById('p1').value);
+    p2 = parseFloat(document.getElementById('p2').value);
+
+    // Limit values to the interval [0, 1]
+    p1 = Math.min(Math.max(p1, 0), 1);
+    p2 = Math.min(Math.max(p2, 0), 1);
+  }
+
+  function restartSimulation() {
+    belief = Array.from({ length: agents }, () => Array(dimensions).fill(null).map(() => Math.random() < 0.5));
+    orgcode = Array(dimensions).fill(null).map(() => Math.random() < 0.5);
+
+    // Update the visual representation after restarting
+    updateBeliefs();
+    updateOrgCode();
+  }
+
+  function stepSimulation() {
+    // Calculate performance and knowledge:
+    const performanceElements = [];
+    for (let i = 0; i < agents; i++) {
+      const performance = belief[i].filter(value => value).length;
+      performanceElements.push(performance);
+    }
+    const organizationalKnowledge = orgcode.filter(value => value).length;
+
+    // Select best teacher:
+    let maxPerformance = Math.max(...performanceElements);
+    let teacherCandidates = performanceElements.reduce((acc, val, idx) => {
+      if (val === maxPerformance) {
+        acc.push(idx);
+      }
+      return acc;
+    }, []);
+
+    const teacher = teacherCandidates[Math.floor(Math.random() * teacherCandidates.length)];
+
+    // Socialization:
+    for (let i = 0; i < agents; i++) {
+      for (let j = 0; j < dimensions; j++) {
+        if (Math.random() < p1) {
+          belief[i][j] = orgcode[j];
+        }
+      }
+    }
+    updateBeliefs();
+
+    // Organizational learning:
+    if (maxPerformance >= organizationalKnowledge) {
+      for (let j = 0; j < dimensions; j++) {
+        if (Math.random() < p2) {
+          orgcode[j] = belief[teacher][j];
+        }
+      }
+    }
+    updateOrgCode();
+
+  }
+
+  initializeSimulation();
+</script>
+
+</body>
+
+</html>
