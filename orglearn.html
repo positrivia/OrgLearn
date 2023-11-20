@@ -24,17 +24,33 @@
 <body>
 
 <script>
-  const dimensions = 9; // Change this to the number of knowledge dimensions
+  const dimensions = 10; // Change this to the number of knowledge dimensions
   const agents = 6; // Change this to the number of agents
+  
+  const color_right = 'lime';
+  const color_wrong = 'pink';
 
-  let p1 = 0.5; // Socialization rate.
-  let p2 = 0.5; // Organizational learning rate.
+  let p1 = 0.5; // Socialization rate, default.
+  let p2 = 0.5; // Organizational learning rate, default.
 
   // Randomly initialized organizational code:
   let orgcode = Array(dimensions).fill(null).map(() => Math.random() < 0.5);
-
   // Randomly initialized individual beliefs:
   let belief = Array.from({ length: agents }, () => Array(dimensions).fill(null).map(() => Math.random() < 0.5));
+
+  function toggleOrgCodeColor(col) {
+    orgcode[col] = !orgcode[col];
+    updateOrgCode();
+  }
+
+function updateOrgCode() {
+    const orgCodeRow = document.getElementById('orgCodeRow');
+
+    for (let j = 1; j <= dimensions; j++) {
+      const cell = orgCodeRow.cells[j];
+      cell.style.backgroundColor = orgcode[j-1] ? color_right : color_wrong;
+    }
+  }
 
   function toggleBeliefColor(row, col) {
     belief[row][col] = !belief[row][col];
@@ -47,22 +63,8 @@
     for (let i = 0; i < agents; i++) {
       for (let j = 0; j < dimensions; j++) {
         const cell = table.rows[i + 1].cells[j + 1];
-        cell.style.backgroundColor = belief[i][j] ? 'green' : 'red';
+        cell.style.backgroundColor = belief[i][j] ? color_right : color_wrong;
       }
-    }
-  }
-
- function toggleOrgCodeColor(col) {
-    orgcode[col] = !orgcode[col];
-    updateOrgCode();
-  }
-
-function updateOrgCode() {
-    const orgCodeRow = document.getElementById('orgCodeRow');
-
-    for (let j = 1; j <= dimensions; j++) {
-      const cell = orgCodeRow.cells[j];
-      cell.style.backgroundColor = orgcode[j-1] ? 'green' : 'red';
     }
   }
 
@@ -70,7 +72,7 @@ function updateOrgCode() {
 
     // Inputs:
     const p1Label = document.createElement('label');
-    p1Label.textContent = 'p1';
+    p1Label.textContent = ' p1 ';
     document.body.appendChild(p1Label);
     const p1Input = document.createElement('input');
     p1Input.type = 'number';
@@ -82,7 +84,7 @@ function updateOrgCode() {
     document.body.appendChild(p1Input);
 
     const p2Label = document.createElement('label');
-    p2Label.textContent = 'p2';
+    p2Label.textContent = ' p2 ';
     document.body.appendChild(p2Label);
     const p2Input = document.createElement('input');
     p2Input.type = 'number';
@@ -93,10 +95,24 @@ function updateOrgCode() {
     p2Input.id = 'p2';
     document.body.appendChild(p2Input);
 
+    const buttonLabel = document.createElement('label');
+    buttonLabel.textContent = '  ';
+    document.body.appendChild(buttonLabel);
     const updateButton = document.createElement('button');
-    updateButton.textContent = 'Update Probabilities';
+    updateButton.textContent = 'update';
     updateButton.addEventListener('click', updateProbabilities);
     document.body.appendChild(updateButton);
+
+    // Restart button:
+    const buttonLabel2 = document.createElement('label');
+    buttonLabel2.textContent = '  ';
+    document.body.appendChild(buttonLabel2);
+    const restartButton = document.createElement('button');
+    restartButton.textContent = 'restart';
+    restartButton.addEventListener('click', restartSimulation);
+    //document.body.appendChild(document.createElement('br'));
+    //document.body.appendChild(document.createElement('br'));
+    document.body.appendChild(restartButton);
 
     // Code:
     const orgCodeTable = document.createElement('table');
@@ -109,7 +125,7 @@ function updateOrgCode() {
     for (let j = 0; j < dimensions; j++) {
       const cell = orgCodeRow.insertCell();
       cell.addEventListener('click', () => toggleOrgCodeColor(j));
-      cell.style.backgroundColor = orgcode[j] ? 'green' : 'red';
+      cell.style.backgroundColor = 'white';
     }
 
     document.body.appendChild(orgCodeTable);
@@ -134,7 +150,7 @@ function updateOrgCode() {
       for (let j = 0; j < dimensions; j++) {
         const cell = row.insertCell();
         cell.addEventListener('click', () => toggleBeliefColor(i, j));
-        cell.style.backgroundColor = belief[i][j] ? 'green' : 'red';
+        cell.style.backgroundColor = 'white';
       }
 
     }
@@ -144,18 +160,11 @@ function updateOrgCode() {
 
     // Step button:
     const simulationButton = document.createElement('button');
-    simulationButton.textContent = 'Step Simulation';
+    simulationButton.textContent = 'step simulation';
     simulationButton.addEventListener('click', stepSimulation);
     document.body.appendChild(document.createElement('br'));
     document.body.appendChild(simulationButton);
 
-    // Restart button:
-    const restartButton = document.createElement('button');
-    restartButton.textContent = 'Restart';
-    restartButton.addEventListener('click', restartSimulation);
-    document.body.appendChild(document.createElement('br'));
-     document.body.appendChild(document.createElement('br'));
-    document.body.appendChild(restartButton);
   }
 
   function updateProbabilities() {
